@@ -1,0 +1,9 @@
+electron12-bin
+elephant-all-git
+ghostty-git
+ghostty-shell-integration-git
+ghostty-terminfo-git
+intellij-idea-ultimate-edition
+pandoc-bin
+walker
+yay
