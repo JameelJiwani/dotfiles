@@ -15,7 +15,7 @@ YELLOW="${e}[0;93m"
 GREEN="${e}[0;92m"
 
 _exists() {
-  command -v "$1" > /dev/null 2>&1
+  command -v "$1" >/dev/null 2>&1
 }
 
 # Success reporter
@@ -42,7 +42,7 @@ finish() {
 
 # Set directory
 export DOTFILES=${1:-"$HOME/.dotfiles"}
-GITHUB_REPO_URL_BASE="https://github.com/denysdovhan/dotfiles"
+GITHUB_REPO_URL_BASE="https://github.com/jameeljiwani/dotfiles"
 HOMEBREW_INSTALLER_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 
 on_start() {
@@ -52,7 +52,7 @@ on_start() {
   info "  _ / /_/ // /_/ // /_ / __// // //  __/(__  ) "
   info " (_)\__,_/ \____/ \__//_/  /_//_/ \___//____/  "
   info "                                               "
-  info "              by @denysdovhan                  "
+  info "              by @jameeljiwani                  "
   info "                                               "
 
   info "This script will guide you through installing git, zsh and dofiles itself."
@@ -100,10 +100,12 @@ install_git() {
 
     if [ "$(uname)" = "Darwin" ]; then
       brew install git
-    elif [ "$(uname)" = "Linux" ]; then
+    elif [ -f /etc/arch-release ]; then
+      sudo pacman -Sy --noconfirm git
+    elif [ -f /etc/debian_version ]; then
       sudo apt install git
     else
-      error "Error: Failed to install Git!"
+      error "Error: Unsupported OS or distro!"
       return
     fi
   else
@@ -128,10 +130,12 @@ install_zsh() {
 
     if [ "$(uname)" = "Darwin" ]; then
       brew install zsh zsh-completions
-    elif [ "$(uname)" = "Linux" ]; then
-      sudo apt install zsh
+    elif [ -f /etc/arch-release ]; then
+      sudo pacman -Sy --noconfirm zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting
+    elif [ -f /etc/debian_version ]; then
+      sudo apt install zsh zsh-completions
     else
-      error "Error: Failed to install Zsh!"
+      error "Error: Unsupported OS or distro!"
       return
     fi
   else
@@ -153,19 +157,39 @@ install_zsh() {
 }
 
 install_software() {
-  if [ "$(uname)" != "Darwin" ]; then
-    return
-  fi
-
   info "Installing software..."
 
   cd "$DOTFILES"
 
-  # Homebrew Bundle
-  if _exists brew; then
-    brew bundle
+  if [ "$(uname)" = "Darwin" ]; then
+    # Homebrew Bundle
+    if _exists brew; then
+      brew bundle
+    else
+      error "Error: Brew is not available"
+    fi
+  elif [ -f /etc/arch-release ]; then
+    packages_file="$DOTFILES/packages/arch.packages"
+    aur_packages_file="$DOTFILES/packages/arch.aur.packages"
+
+    mapfile -t packages < <(grep -Ehv '^\s*#|^\s*$' "$packages_file")
+    sudo pacman -Sy --noconfirm --needed "${packages[@]}"
+
+    if _exists yay; then
+      mapfile -t aur_packages < <(grep -Ehv '^\s*#|^\s*$' "$aur_packages_file")
+      yay -S --noconfirm --needed "${aur_packages[@]}"
+    else
+      error "Error: yay is not available"
+    fi
+  elif [ -f /etc/debian_version ]; then
+    packages_file="$DOTFILES/packages/debian.packages"
+
+    mapfile -t packages < <(grep -Ehv '^\s*#|^\s*$' "$packages_file")
+
+    sudo apt update
+    sudo apt install -y "${packages[@]}"
   else
-    error "Error: Brew is not available"
+    error "Error: Unsupported OS or distro!"
   fi
 
   cd -
@@ -173,6 +197,37 @@ install_software() {
   finish
 }
 
+install_yay() {
+  if [ ! -f /etc/arch-release ]; then
+    return
+  fi
+
+  info "Trying to detect installed yay..."
+
+  if _exists yay; then
+    success "You already have yay installed. Skipping..."
+    finish
+    return
+  fi
+
+  echo "Seems like you don't have yay installed!"
+  read -p "Do you agree to proceed with yay installation? [y/N] " -n 1 answer
+  echo
+  if [ "${answer}" != "y" ]; then
+    return
+  fi
+
+  info "Installing yay..."
+
+  tmp_dir="$(mktemp -d)"
+  git clone https://aur.archlinux.org/yay.git "${tmp_dir}/yay"
+  (cd "${tmp_dir}/yay" && makepkg -si --noconfirm)
+  rm -rf "${tmp_dir}"
+
+  finish
+}
+
+# TODO: Setup support for Debian and Arch
 install_npm() {
   # Do not instal npm on non-macOS machines
   if [ "$(uname)" != "Darwin" ]; then
@@ -201,13 +256,13 @@ on_finish() {
   success "Happy Coding!"
   echo
   echo -ne "$RED"'-_-_-_-_-_-_-_-_-_-_-_-_-_-_'
-  echo -e  "$RESET""$BOLD"',------,'"$RESET"
+  echo -e "$RESET""$BOLD"',------,'"$RESET"
   echo -ne "$YELLOW"'-_-_-_-_-_-_-_-_-_-_-_-_-_-_'
-  echo -e  "$RESET""$BOLD"'|   /\_/\\'"$RESET"
+  echo -e "$RESET""$BOLD"'|   /\_/\\'"$RESET"
   echo -ne "$GREEN"'-_-_-_-_-_-_-_-_-_-_-_-_-_-'
-  echo -e  "$RESET""$BOLD"'~|__( ^ .^)'"$RESET"
+  echo -e "$RESET""$BOLD"'~|__( ^ .^)'"$RESET"
   echo -ne "$CYAN"'-_-_-_-_-_-_-_-_-_-_-_-_-_-_'
-  echo -e  "$RESET""$BOLD"'""  ""'"$RESET"
+  echo -e "$RESET""$BOLD"'""  ""'"$RESET"
   echo
   info "P.S: Don't forget to restart a terminal :)"
   echo
@@ -226,6 +281,7 @@ main() {
   on_start "$*"
   install_homebrew "$*"
   install_git "$*"
+  install_yay "$*"
   install_zsh "$*"
   install_software "$*"
   install_npm "$*"

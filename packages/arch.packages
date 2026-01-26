@@ -1,0 +1,25 @@
+# Arch Linux packages (pacman)
+# NOTE: One package name per line.
+
+git
+zsh
+zsh-completions
+zsh-autosuggestions
+zsh-syntax-highlighting
+neovim
+nodejs
+coreutils
+tree
+eza
+zoxide
+fzf
+wget
+yarn
+tldr
+github-cli
+speedtest-cli
+bat
+trash-cli
+youtube-dl
+watchman
+lazydocker

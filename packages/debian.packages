@@ -1,0 +1,26 @@
+# Debian/Ubuntu packages (apt)
+# NOTE: One package name per line.
+
+git
+zsh
+zsh-completions
+zsh-autosuggestions
+zsh-syntax-highlighting
+neovim
+nodejs
+coreutils
+tree
+eza
+zoxide
+fzf
+wget
+yarnpkg
+tldr
+gh
+speedtest-cli
+bat
+trash-cli
+youtube-dl
+watchman
+opencode
+lazydocker

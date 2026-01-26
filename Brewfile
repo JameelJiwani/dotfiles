@@ -88,6 +88,6 @@ mas "Home Assistant", id: 1099568401
 mas "Bitwarden", id: 1352778147
 mas "Spark", id: 1176895641
 mas "Unsplash Wallpapers", id: 12848638472
-mas "NordVPN", id: 905953485
+mas "Tailscale", id: 1475387142 
 mas "The Unarchiver",  id: 425424353
 mas "Pandan", id: 1569600264

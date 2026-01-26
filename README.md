@@ -1,4 +1,4 @@
-# Denys Dovhan’s dotfiles
+# Jameel Jiwani’s dotfiles
 
 <p align="center">
   <img alt="Spaceship with Hyper and One Dark" src="https://user-images.githubusercontent.com/10276208/36086434-5de52ace-0ff2-11e8-8299-c67f9ab4e9bd.gif" width="980px">
@@ -37,7 +37,7 @@ Clone dotfiles repo:
 
 ```sh
 # Clone dotfiles repo
-git clone https://github.com/denysdovhan/dotfiles.git $HOME/.dotfiles
+git clone https://github.com/jameeljiwani/dotfiles.git $HOME/.dotfiles
 
 # Go to the dotfiles directory
 cd $HOME/.dotfiles
@@ -193,7 +193,4 @@ Resources that I used to make these dotfiles better:
 
 - [GitHub ❤ ~/](http://dotfiles.github.com/)
 - [Mathias’s dotfiles](https://github.com/mathiasbynens/dotfiles)
-
-## License
-
-MIT © [Denys Dovhan](https://denysdovhan.com)
+- [Denys Dovhan’s dotfiles](https://github.com/denysdovhan/dotfiles)
