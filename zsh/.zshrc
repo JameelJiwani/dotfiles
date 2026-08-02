@@ -70,7 +70,7 @@ else
 fi
 
 # Better formatting for time command
-export TIMEFMT=$'\n================\nCPU\t%P\nuser\t%*U\nsystem\t%*S\ntotal\t%*E'
+TIMEFMT=$'\n================\nCPU\t%P\nuser\t%*U\nsystem\t%*S\ntotal\t%*E'
 
 # ------------------------------------------------------------------------------
 # Oh My Zsh
@@ -150,6 +150,7 @@ if ! zgen saved; then
     zgen load zsh-users/zsh-syntax-highlighting
     zgen load zsh-users/zsh-autosuggestions
     zgen load Aloxaf/fzf-tab
+    zgen load "pyte1/spaceship-distrobox"
 
     # Files
     zgen load $DOTFILES/lib
