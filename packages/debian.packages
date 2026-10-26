@@ -1,11 +1,18 @@
 # Debian/Ubuntu packages (apt)
 # NOTE: One package name per line.
+# Tools not packaged by Debian (lazydocker, opencode) are installed by
+# install_debian_extras in scripts/bootstrap. zsh-completions and watchman
+# have no Debian package; zsh-completions is loaded via zgen instead.
 
 git
+git-lfs
+stow
+curl
+locales
 zsh
-zsh-completions
 zsh-autosuggestions
 zsh-syntax-highlighting
+vim
 neovim
 nodejs
 coreutils
@@ -13,14 +20,14 @@ tree
 eza
 zoxide
 fzf
+direnv
 wget
 yarnpkg
-tldr
+tealdeer
 gh
 speedtest-cli
 bat
+btop
+lazygit
 trash-cli
-youtube-dl
-watchman
-opencode
-lazydocker
+yt-dlp
