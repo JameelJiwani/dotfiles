@@ -17,6 +17,7 @@ neovim
 nodejs
 coreutils
 tree
+tmux
 eza
 zoxide
 fzf

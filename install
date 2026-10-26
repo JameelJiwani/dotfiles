@@ -14,7 +14,7 @@ set -e
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="${BASEDIR}/backup/$(date +%Y%m%d-%H%M%S)"
 
-DEFAULT_PACKAGES=(home zsh git nvim btop husky)
+DEFAULT_PACKAGES=(home zsh git nvim btop husky tmux)
 DESKTOP_PACKAGES=(ghostty hyprland waybar walker)
 
 if ! command -v stow >/dev/null 2>&1; then

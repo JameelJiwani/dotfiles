@@ -34,7 +34,7 @@ cd $HOME/.dotfiles
 ./scripts/bootstrap
 
 # 3. Symlink dotfiles into $HOME with GNU Stow and install zgen
-./install            # headless: home zsh git nvim btop husky
+./install            # headless: home zsh git nvim btop husky tmux
 ./install --desktop  # also Hyprland, Waybar, Walker, Ghostty
 
 # 4. Start zsh (the first launch downloads all plugins)

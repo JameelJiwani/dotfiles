@@ -110,3 +110,16 @@ fi
 if _exists lazygit; then
   alias lg='lazygit'
 fi
+
+# Tmux
+# https://github.com/tmux/tmux
+if _exists tmux; then
+  # Attach to the "main" session, creating it if needed
+  alias ta='tmux new -A -s main'
+fi
+
+# SSH into a host and attach to its tmux session, so work survives dropped connections
+#   sshtm CT108
+sshtm() {
+  ssh -t "$@" tmux new -A -s main
+}
