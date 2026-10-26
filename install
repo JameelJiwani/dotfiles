@@ -1,15 +1,63 @@
 #!/usr/bin/env bash
 
+# Symlink dotfiles into $HOME using GNU Stow.
+#
+# Usage:
+#   ./install              # link the default (headless-friendly) packages
+#   ./install --desktop    # also link desktop packages (Hyprland, Waybar, ...)
+#   ./install <pkg>...     # link only the given packages
+#
+# Existing files that would conflict are moved to $DOTFILES/backup/<timestamp>/.
+
 set -e
 
-CONFIG="install.conf.yaml"
-DOTBOT_DIR="dotbot"
-
-DOTBOT_BIN="bin/dotbot"
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKUP_DIR="${BASEDIR}/backup/$(date +%Y%m%d-%H%M%S)"
+
+DEFAULT_PACKAGES=(home zsh git nvim btop husky)
+DESKTOP_PACKAGES=(ghostty hyprland waybar walker)
+
+if ! command -v stow >/dev/null 2>&1; then
+  echo "Error: GNU Stow is not installed. Run ./scripts/bootstrap first." >&2
+  exit 1
+fi
+
+if [ "$1" = "--desktop" ]; then
+  packages=("${DEFAULT_PACKAGES[@]}" "${DESKTOP_PACKAGES[@]}")
+elif [ $# -gt 0 ]; then
+  packages=("$@")
+else
+  packages=("${DEFAULT_PACKAGES[@]}")
+fi
 
 cd "${BASEDIR}"
-git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
-git submodule update --init --recursive "${DOTBOT_DIR}"
 
-"${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}" -c "${CONFIG}" "${@}"
+# Move real files (not our symlinks) out of the way so stow doesn't refuse to link
+backup_conflicts() {
+  local pkg="$1" file target
+  while IFS= read -r file; do
+    file="${file#"${pkg}"/}"
+    [ "$(basename "$file")" = ".stow-local-ignore" ] && continue
+    target="${HOME}/${file}"
+    if [ -e "$target" ] && [ ! -L "$target" ]; then
+      mkdir -p "$(dirname "${BACKUP_DIR}/${file}")"
+      mv "$target" "${BACKUP_DIR}/${file}"
+      echo "Backed up ~/${file} -> ${BACKUP_DIR#"${BASEDIR}"/}/${file}"
+    fi
+  done < <(find "$pkg" -type f)
+}
+
+for pkg in "${packages[@]}"; do
+  backup_conflicts "$pkg"
+  # --no-folding keeps directories like ~/.config/gh real, so runtime files
+  # (e.g. gh's auth tokens) never end up inside the repo
+  stow --no-folding --restow --target="$HOME" "$pkg"
+  echo "Linked ${pkg}"
+done
+
+mkdir -p "$HOME/.config"
+
+echo "Installing zgen..."
+./scripts/zgen
+
+./scripts/projects

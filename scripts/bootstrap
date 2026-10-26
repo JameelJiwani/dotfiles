@@ -66,6 +66,11 @@ on_start() {
 }
 
 install_homebrew() {
+  # Homebrew is only used on macOS
+  if [ "$(uname)" != "Darwin" ]; then
+    return
+  fi
+
   info "Trying to detect installed Homebrew..."
 
   if ! _exists brew; then
@@ -103,7 +108,7 @@ install_git() {
     elif [ -f /etc/arch-release ]; then
       sudo pacman -Sy --noconfirm git
     elif [ -f /etc/debian_version ]; then
-      sudo apt install git
+      sudo apt install -y git
     else
       error "Error: Unsupported OS or distro!"
       return
@@ -133,7 +138,7 @@ install_zsh() {
     elif [ -f /etc/arch-release ]; then
       sudo pacman -Sy --noconfirm zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting
     elif [ -f /etc/debian_version ]; then
-      sudo apt install zsh zsh-completions
+      sudo apt install -y zsh zsh-autosuggestions zsh-syntax-highlighting
     else
       error "Error: Unsupported OS or distro!"
       return
@@ -188,6 +193,12 @@ install_software() {
 
     sudo apt update
     sudo apt install -y "${packages[@]}"
+
+    # Debian ships bat as `batcat`
+    if ! _exists bat && _exists batcat; then
+      mkdir -p "$HOME/.local/bin"
+      ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
+    fi
   else
     error "Error: Unsupported OS or distro!"
   fi
@@ -223,6 +234,25 @@ install_yay() {
   git clone https://aur.archlinux.org/yay.git "${tmp_dir}/yay"
   (cd "${tmp_dir}/yay" && makepkg -si --noconfirm)
   rm -rf "${tmp_dir}"
+
+  finish
+}
+
+# Tools that aren't packaged in Debian's repos; installed into ~/.local/bin
+install_debian_extras() {
+  if [ ! -f /etc/debian_version ]; then
+    return
+  fi
+
+  info "Installing tools not packaged for Debian..."
+
+  if ! _exists lazydocker; then
+    curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | DIR="$HOME/.local/bin" bash
+  fi
+
+  if ! _exists opencode; then
+    curl -fsSL https://opencode.ai/install | bash
+  fi
 
   finish
 }
@@ -264,7 +294,7 @@ on_finish() {
   echo -ne "$CYAN"'-_-_-_-_-_-_-_-_-_-_-_-_-_-_'
   echo -e "$RESET""$BOLD"'""  ""'"$RESET"
   echo
-  info "P.S: Don't forget to restart a terminal :)"
+  info "Next: run ${BOLD}${DOTFILES}/install${RESET}${CYAN} to symlink dotfiles, then restart your terminal :)"
   echo
 }
 
@@ -272,7 +302,7 @@ on_error() {
   echo
   error "Wow... Something serious happened!"
   error "Though, I don't know what really happened :("
-  error "In case, you want to help me fix this problem, raise an issue -> ${CYAN}${GITHUB_REPO_URL_BASE}issues/new${RESET}"
+  error "In case, you want to help me fix this problem, raise an issue -> ${CYAN}${GITHUB_REPO_URL_BASE}/issues/new${RESET}"
   echo
   exit 1
 }
@@ -284,6 +314,7 @@ main() {
   install_yay "$*"
   install_zsh "$*"
   install_software "$*"
+  install_debian_extras "$*"
   install_npm "$*"
   on_finish "$*"
 }

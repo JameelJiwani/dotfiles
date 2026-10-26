@@ -15,8 +15,7 @@ There are tons of useful things in here:
 - [zgen](https://github.com/tarjoilija/zgen) for dependency management.
 - Useful [aliases](./lib/aliases.zsh).
 - Git config, global `.gitignore` file and aliases.
-- Dotfiles synchronization (`sync.py`) with backup.
-- Restoring old dotfiles (`restore.py`) from backup.
+- Dotfiles symlinked with [GNU Stow](https://www.gnu.org/software/stow/) (`./install`), backing up anything they replace.
 - A lot of [useful bins](https://github.com/denysdovhan/dotfiles/tree/master/bin).
 - `update` script for updating dotfiles, npm, brew, gems, etc.
 
@@ -24,27 +23,38 @@ Missing feature? 🍴 Fork this repo and make it better!
 
 ## Installation
 
-Dotfiles are installed by running one of the following commands in your terminal, just copy one of the following commands and execute in the terminal:
+On a fresh Debian machine (including a Proxmox LXC), make sure your user can `sudo` and has `git` and `curl` (as root: `apt install -y sudo git curl && usermod -aG sudo <user>`, then log in again).
 
-Tell Git who you are using these commands:
+```sh
+# 1. Clone dotfiles repo
+git clone https://github.com/jameeljiwani/dotfiles.git $HOME/.dotfiles
+cd $HOME/.dotfiles
+
+# 2. Install packages (zsh, stow, CLI tools) and set zsh as the login shell
+./scripts/bootstrap
+
+# 3. Symlink dotfiles into $HOME with GNU Stow and install zgen
+./install            # headless: home zsh git nvim btop husky
+./install --desktop  # also Hyprland, Waybar, Walker, Ghostty
+
+# 4. Start zsh (the first launch downloads all plugins)
+exec zsh
+```
+
+`./install` moves any existing file it would replace (e.g. a stock `~/.zshrc`) into `backup/<timestamp>/`. Put anything machine-specific (SDKMAN, Go paths, …) in `~/.zshlocal`.
+
+Your Git identity is already set in `git/.gitconfig`; to override it per machine, use `~/.gitlocal`:
 
 ```sh
 git config -f ~/.gitlocal user.email "email@yoursite.com"
 git config -f ~/.gitlocal user.name "Name Lastname"
 ```
 
-Clone dotfiles repo:
+### Debian notes
 
-```sh
-# Clone dotfiles repo
-git clone https://github.com/jameeljiwani/dotfiles.git $HOME/.dotfiles
-
-# Go to the dotfiles directory
-cd $HOME/.dotfiles
-
-# Install dotfiles
-./install
-```
+- Packages come from [`packages/debian.packages`](./packages/debian.packages). Tools Debian doesn't package (`lazydocker`, `opencode`) are installed into `~/.local/bin` by `bootstrap`.
+- Debian ships `bat` as `batcat`; `bootstrap` symlinks it to `~/.local/bin/bat`.
+- The `.zshrc` exports `en_US.UTF-8`. If you get locale warnings, run `sudo dpkg-reconfigure locales` and enable it.
 
 ## Updating
 

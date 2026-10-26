@@ -1,0 +1,3 @@
+# Overrides stow's default ignore list, which would otherwise skip .gitignore
+# (our global gitignore, referenced by core.excludesfile)
+^/\.stow-local-ignore$
