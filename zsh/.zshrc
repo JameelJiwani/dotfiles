@@ -150,7 +150,7 @@ if ! zgen saved; then
     zgen load zsh-users/zsh-syntax-highlighting
     zgen load zsh-users/zsh-autosuggestions
     zgen load Aloxaf/fzf-tab
-    zgen load "pyte1/spaceship-distrobox"
+    zgen load pyte1/spaceship-distrobox spaceship-distrobox.plugin.zsh main
 
     # Files
     zgen load $DOTFILES/lib
