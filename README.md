@@ -15,35 +15,39 @@ There are tons of useful things in here:
 - [zgen](https://github.com/tarjoilija/zgen) for dependency management.
 - Useful [aliases](./lib/aliases.zsh).
 - Git config, global `.gitignore` file and aliases.
-- Dotfiles synchronization (`sync.py`) with backup.
-- Restoring old dotfiles (`restore.py`) from backup.
-- A lot of [useful bins](https://github.com/denysdovhan/dotfiles/tree/master/bin).
+- [GNU Stow](https://www.gnu.org/software/stow/) for linking packages into `$HOME`.
+- A lot of [useful bins](./bin).
 - `update` script for updating dotfiles, npm, brew, gems, etc.
 
 Missing feature? 🍴 Fork this repo and make it better!
 
+## Dependencies
+
+- [GNU Stow](https://www.gnu.org/software/stow/) — used by `./install` to symlink packages into `$HOME`
+  - Homebrew: `brew install stow`
+  - Fedora: `sudo dnf install stow`
+
 ## Installation
 
-Dotfiles are installed by running one of the following commands in your terminal, just copy one of the following commands and execute in the terminal:
-
-Tell Git who you are using these commands:
+Tell Git who you are:
 
 ```sh
 git config -f ~/.gitlocal user.email "email@yoursite.com"
 git config -f ~/.gitlocal user.name "Name Lastname"
 ```
 
-Clone dotfiles repo:
+Clone and install:
 
 ```sh
-# Clone dotfiles repo
 git clone https://github.com/jameeljiwani/dotfiles.git $HOME/.dotfiles
-
-# Go to the dotfiles directory
 cd $HOME/.dotfiles
-
-# Install dotfiles
 ./install
+```
+
+`./install` restows all packages by default (`zsh`, `git`, `home`, `nvim`, `ghostty`, `btop`, `hyprland`, `waybar`, `walker`, `husky`). Pass package names to restow a subset:
+
+```sh
+./install nvim ghostty
 ```
 
 ## Updating

@@ -1,15 +1,101 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-CONFIG="install.conf.yaml"
-DOTBOT_DIR="dotbot"
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_PACKAGES=(
+  zsh
+  git
+  home
+  nvim
+  ghostty
+  btop
+  hyprland
+  waybar
+  walker
+  husky
+)
 
-DOTBOT_BIN="bin/dotbot"
-BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ensure_stow() {
+  if command -v stow >/dev/null 2>&1; then
+    return
+  fi
 
-cd "${BASEDIR}"
-git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
-git submodule update --init --recursive "${DOTBOT_DIR}"
+  if command -v brew >/dev/null 2>&1; then
+    echo "stow not found; installing via Homebrew..."
+    brew install stow
+    return
+  fi
 
-"${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}" -c "${CONFIG}" "${@}"
+  echo "GNU Stow is required but was not found on PATH." >&2
+  echo "Install it, then re-run ./install:" >&2
+  echo "  brew install stow" >&2
+  echo "  # or on Fedora: sudo dnf install stow" >&2
+  exit 1
+}
+
+# Remove leftover symlinks (e.g. from Dotbot) that already point into a package
+# so Stow can recreate them as package-owned links.
+prune_package_symlinks() {
+  local package="$1"
+  local pkg_dir="$DOTFILES/$package"
+  local pkg_real
+  pkg_real="$(cd "$pkg_dir" && pwd -P)"
+
+  while IFS= read -r -d '' path; do
+    local rel="${path#"$pkg_dir"/}"
+    local target="$HOME/$rel"
+
+    [[ -L "$target" ]] || continue
+
+    local dest
+    dest="$(readlink -f "$target" 2>/dev/null || true)"
+    [[ -n "$dest" ]] || continue
+
+    if [[ "$dest" == "$pkg_real" || "$dest" == "$pkg_real/"* ]]; then
+      rm "$target"
+    fi
+  done < <(find "$pkg_dir" -mindepth 1 \( -type f -o -type l \) -print0)
+}
+
+main() {
+  cd "$DOTFILES"
+
+  ensure_stow
+
+  mkdir -p "${HOME}/.config"
+
+  local packages=()
+  if [[ $# -gt 0 ]]; then
+    packages=("$@")
+  else
+    packages=("${DEFAULT_PACKAGES[@]}")
+  fi
+
+  local package
+  for package in "${packages[@]}"; do
+    if [[ ! -d "$DOTFILES/$package" ]]; then
+      echo "Unknown package: $package" >&2
+      exit 1
+    fi
+    prune_package_symlinks "$package"
+  done
+
+  echo "Stowing packages: ${packages[*]}"
+  if ! stow -d "$DOTFILES" -t "$HOME" -R "${packages[@]}"; then
+    echo >&2
+    echo "Stow failed. A target in \$HOME likely already exists as a real file." >&2
+    echo "Move or remove the conflicting path, then re-run ./install." >&2
+    exit 1
+  fi
+
+  echo "Installing zgen..."
+  ./scripts/zgen
+
+  echo "Scaffolding project folders..."
+  ./scripts/projects
+
+  echo "Done."
+}
+
+main "$@"

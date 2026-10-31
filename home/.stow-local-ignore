@@ -1,0 +1,17 @@
+# Override Stow's built-in ignore list for this package.
+# The built-in list skips .gitignore, but this package installs ~/.gitignore.
+RCS
+.+,v
+CVS
+\.\#.+
+\.cvsignore
+\.svn
+_darcs
+\.hg
+\.git
+\.gitmodules
+.+~
+\#.*\#
+^/README.*
+^/LICENSE.*
+^/COPYING
