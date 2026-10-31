@@ -1,5 +1,6 @@
-# Override Stow's built-in ignore list for this package.
-# The built-in list skips .gitignore, but this package installs ~/.gitignore.
+# Overrides stow's default ignore list, which would otherwise skip .gitignore
+# (our global gitignore, referenced by core.excludesfile)
+^/\.stow-local-ignore$
 RCS
 .+,v
 CVS

@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
 
+# Symlink dotfiles into $HOME using GNU Stow.
+#
+# Usage:
+#   ./install              # link the default (headless-friendly) packages
+#   ./install --desktop    # also link desktop packages (Hyprland, Waybar, ...)
+#   ./install <pkg>...     # link only the given packages
+#
+# Existing files that would conflict are moved to $DOTFILES/backup/<timestamp>/.
+
 set -euo pipefail
 
-DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEFAULT_PACKAGES=(
-  zsh
-  git
-  home
-  nvim
-  ghostty
-  btop
-  hyprland
-  waybar
-  walker
-  husky
-)
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKUP_DIR="${BASEDIR}/backup/$(date +%Y%m%d-%H%M%S)"
+
+DEFAULT_PACKAGES=(home zsh git nvim btop husky tmux)
+DESKTOP_PACKAGES=(ghostty hyprland waybar walker)
 
 ensure_stow() {
   if command -v stow >/dev/null 2>&1; then
@@ -27,30 +28,23 @@ ensure_stow() {
     return
   fi
 
-  echo "GNU Stow is required but was not found on PATH." >&2
-  echo "Install it, then re-run ./install:" >&2
-  echo "  brew install stow" >&2
-  echo "  # or on Fedora: sudo dnf install stow" >&2
+  echo "Error: GNU Stow is not installed. Run ./scripts/bootstrap first." >&2
   exit 1
 }
 
 # Remove leftover symlinks (e.g. from Dotbot) that already point into a package
 # so Stow can recreate them as package-owned links.
 prune_package_symlinks() {
-  local package="$1"
-  local pkg_dir="$DOTFILES/$package"
-  local pkg_real
+  local pkg="$1" pkg_dir pkg_real path target dest
+  pkg_dir="${BASEDIR}/${pkg}"
   pkg_real="$(cd "$pkg_dir" && pwd -P)"
 
   while IFS= read -r -d '' path; do
-    local rel="${path#"$pkg_dir"/}"
-    local target="$HOME/$rel"
+    target="${HOME}/${path#"${pkg_dir}"/}"
+    [ -L "$target" ] || continue
 
-    [[ -L "$target" ]] || continue
-
-    local dest
     dest="$(readlink -f "$target" 2>/dev/null || true)"
-    [[ -n "$dest" ]] || continue
+    [ -n "$dest" ] || continue
 
     if [[ "$dest" == "$pkg_real" || "$dest" == "$pkg_real/"* ]]; then
       rm "$target"
@@ -58,44 +52,58 @@ prune_package_symlinks() {
   done < <(find "$pkg_dir" -mindepth 1 \( -type f -o -type l \) -print0)
 }
 
-main() {
-  cd "$DOTFILES"
-
-  ensure_stow
-
-  mkdir -p "${HOME}/.config"
-
-  local packages=()
-  if [[ $# -gt 0 ]]; then
-    packages=("$@")
-  else
-    packages=("${DEFAULT_PACKAGES[@]}")
-  fi
-
-  local package
-  for package in "${packages[@]}"; do
-    if [[ ! -d "$DOTFILES/$package" ]]; then
-      echo "Unknown package: $package" >&2
-      exit 1
+# Move real files (not our symlinks) out of the way so stow doesn't refuse to link
+backup_conflicts() {
+  local pkg="$1" file target
+  while IFS= read -r file; do
+    file="${file#"${pkg}"/}"
+    [ "$(basename "$file")" = ".stow-local-ignore" ] && continue
+    target="${HOME}/${file}"
+    if [ -e "$target" ] && [ ! -L "$target" ]; then
+      mkdir -p "$(dirname "${BACKUP_DIR}/${file}")"
+      mv "$target" "${BACKUP_DIR}/${file}"
+      echo "Backed up ~/${file} -> ${BACKUP_DIR#"${BASEDIR}"/}/${file}"
     fi
-    prune_package_symlinks "$package"
-  done
-
-  echo "Stowing packages: ${packages[*]}"
-  if ! stow -d "$DOTFILES" -t "$HOME" -R "${packages[@]}"; then
-    echo >&2
-    echo "Stow failed. A target in \$HOME likely already exists as a real file." >&2
-    echo "Move or remove the conflicting path, then re-run ./install." >&2
-    exit 1
-  fi
-
-  echo "Installing zgen..."
-  ./scripts/zgen
-
-  echo "Scaffolding project folders..."
-  ./scripts/projects
-
-  echo "Done."
+  done < <(find "$pkg" -type f)
 }
 
-main "$@"
+ensure_stow
+
+if [ "${1:-}" = "--desktop" ]; then
+  packages=("${DEFAULT_PACKAGES[@]}" "${DESKTOP_PACKAGES[@]}")
+elif [ $# -gt 0 ]; then
+  packages=("$@")
+else
+  packages=("${DEFAULT_PACKAGES[@]}")
+fi
+
+cd "${BASEDIR}"
+
+for pkg in "${packages[@]}"; do
+  if [ ! -d "${BASEDIR}/${pkg}" ]; then
+    echo "Error: unknown package: ${pkg}" >&2
+    exit 1
+  fi
+done
+
+for pkg in "${packages[@]}"; do
+  prune_package_symlinks "$pkg"
+  backup_conflicts "$pkg"
+  # --no-folding keeps directories like ~/.config/gh real, so runtime files
+  # (e.g. gh's auth tokens) never end up inside the repo
+  if ! stow --no-folding --restow --target="$HOME" "$pkg"; then
+    echo "Error: stow failed for ${pkg}. Move or remove the conflicting path, then re-run ./install." >&2
+    exit 1
+  fi
+  echo "Linked ${pkg}"
+done
+
+mkdir -p "$HOME/.config"
+
+echo "Installing zgen..."
+./scripts/zgen
+
+echo "Scaffolding project folders..."
+./scripts/projects
+
+echo "Done."

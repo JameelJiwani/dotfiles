@@ -5,7 +5,7 @@ cursor-style = block
 cursor-style-blink = true
 window-height = 25
 window-width = 80
-shell-integration-features = sudo, no-cursor
+shell-integration-features = sudo, no-cursor, ssh-terminfo, ssh-env
 
 keybind = ctrl+h=goto_split:left
 keybind = ctrl+j=goto_split:down

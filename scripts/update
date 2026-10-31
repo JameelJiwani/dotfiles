@@ -87,7 +87,7 @@ update_apt() {
     return
   fi
 
-  info "Updating Ubuntu and installed packages..."
+  info "Updating apt packages..."
 
   sudo apt update
   sudo apt upgrade -y
@@ -125,7 +125,7 @@ main() {
   on_start "$*"
   update_dotfiles "$*"
   update_brew "$*"
-  update_apt_get "$*"
+  update_apt "$*"
   on_finish "$*"
 }
 
