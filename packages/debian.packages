@@ -1,6 +1,6 @@
 # Debian/Ubuntu packages (apt)
 # NOTE: One package name per line.
-# Tools not packaged by Debian (lazydocker, opencode) are installed by
+# Tools not packaged by Debian (lazydocker, herdr, pi) are installed by
 # install_debian_extras in scripts/bootstrap. zsh-completions and watchman
 # have no Debian package; zsh-completions is loaded via zgen instead.
 
@@ -15,6 +15,7 @@ zsh-syntax-highlighting
 vim
 neovim
 nodejs
+npm
 coreutils
 tree
 tmux

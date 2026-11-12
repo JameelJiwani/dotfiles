@@ -182,7 +182,9 @@ install_software() {
 
     if _exists yay; then
       mapfile -t aur_packages < <(grep -Ehv '^\s*#|^\s*$' "$aur_packages_file")
-      yay -S --noconfirm --needed "${aur_packages[@]}"
+      if [ ${#aur_packages[@]} -gt 0 ]; then
+        yay -S --noconfirm --needed "${aur_packages[@]}"
+      fi
     else
       error "Error: yay is not available"
     fi
@@ -250,8 +252,8 @@ install_debian_extras() {
     curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | DIR="$HOME/.local/bin" bash
   fi
 
-  if ! _exists opencode; then
-    curl -fsSL https://opencode.ai/install | bash
+  if ! _exists pi; then
+    npm install -g --prefix "$HOME/.local" @mariozechner/pi-coding-agent
   fi
 
   if ! _exists herdr; then
