@@ -254,6 +254,10 @@ install_debian_extras() {
     curl -fsSL https://opencode.ai/install | bash
   fi
 
+  if ! _exists herdr; then
+    curl -fsSL https://herdr.dev/install.sh | sh
+  fi
+
   finish
 }
 

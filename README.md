@@ -34,7 +34,7 @@ cd $HOME/.dotfiles
 ./scripts/bootstrap
 
 # 3. Symlink dotfiles into $HOME with GNU Stow and install zgen
-./install            # headless: home zsh git nvim btop husky tmux
+./install            # headless: home zsh git nvim btop husky tmux herdr
 ./install --desktop  # also Hyprland, Waybar, Walker, Ghostty
 
 # 4. Start zsh (the first launch downloads all plugins)
@@ -52,7 +52,7 @@ git config -f ~/.gitlocal user.name "Name Lastname"
 
 ### Debian notes
 
-- Packages come from [`packages/debian.packages`](./packages/debian.packages). Tools Debian doesn't package (`lazydocker`, `opencode`) are installed into `~/.local/bin` by `bootstrap`.
+- Packages come from [`packages/debian.packages`](./packages/debian.packages). Tools Debian doesn't package (`lazydocker`, `opencode`, `herdr`) are installed into `~/.local/bin` by `bootstrap`.
 - Debian ships `bat` as `batcat`; `bootstrap` symlinks it to `~/.local/bin/bat`.
 - The `.zshrc` exports `en_US.UTF-8`. If you get locale warnings, run `sudo dpkg-reconfigure locales` and enable it.
 
